@@ -122,9 +122,9 @@ class RSSBot(Plugin):
                 prune_entries = self.config["prune_entries"]
                 if prune_entries and type(prune_entries) is int and prune_entries > 0:
                     await self.dbm.prune_entries(prune_entries)
-                await asyncio.sleep(86400) # prune_entries daily. 1 day = 86400s.
+                await asyncio.sleep(86400)  # prune_entries daily. 1 day = 86400s.
         except asyncio.CancelledError:
-                self.log.debug("Pruning stopped")
+            self.log.debug("Pruning stopped")
         except Exception:
             self.log.exception("Fatal error while pruning")
 
