@@ -57,6 +57,7 @@ class Config(BaseProxyConfig):
         helper.copy("command_prefix")
         helper.copy("notification_template")
         helper.copy("admins")
+        helper.copy("prune_entries")
 
 
 class BoolArgument(command.Argument):
@@ -81,6 +82,7 @@ def handle_timeout(signal: signal.Signals, frame: FrameType) -> None:
 class RSSBot(Plugin):
     dbm: DBManager
     poll_task: asyncio.Future
+    prune_entries_task: asyncio.Future
     http: aiohttp.ClientSession
     power_level_cache: dict[RoomID, tuple[int, PowerLevelStateEventContent]]
 
@@ -99,10 +101,12 @@ class RSSBot(Plugin):
         self.http = self.client.api.session
         self.power_level_cache = {}
         self.poll_task = asyncio.create_task(self.poll_feeds())
+        self.prune_entries_task = asyncio.create_task(self.prune_entries())
 
     async def stop(self) -> None:
         await super().stop()
         self.poll_task.cancel()
+        self.prune_entries_task.cancel()
 
     async def poll_feeds(self) -> None:
         try:
@@ -111,6 +115,18 @@ class RSSBot(Plugin):
             self.log.debug("Polling stopped")
         except Exception:
             self.log.exception("Fatal error while polling feeds")
+
+    async def prune_entries(self) -> None:
+        try:
+            while True:
+                prune_entries = self.config["prune_entries"]
+                if prune_entries and type(prune_entries) is int and prune_entries > 0:
+                    await self.dbm.prune_entries(prune_entries)
+                await asyncio.sleep(86400) # prune_entries daily. 1 day = 86400s.
+        except asyncio.CancelledError:
+                self.log.debug("Pruning stopped")
+        except Exception:
+            self.log.exception("Fatal error while pruning")
 
     @staticmethod
     def _safe_apply_filter(feed_filter: str, title: str) -> dict[str, bool]:

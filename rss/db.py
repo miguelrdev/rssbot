@@ -246,3 +246,7 @@ class DBManager:
     async def update_feed_filter(self, feed_id: int, room_id: RoomID, feed_filter: str) -> None:
         q = "UPDATE subscription SET feed_filter=$3 WHERE feed_id=$1 AND room_id=$2"
         await self.db.execute(q, feed_id, room_id, feed_filter)
+
+    async def prune_entries(self, num_days: int) -> None:
+        q = "DELETE FROM entry WHERE date < DATETIME('NOW', '-' || $1 || ' days')"
+        await self.db.execute(q, num_days)

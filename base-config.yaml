@@ -13,3 +13,5 @@ notification_template: "New post in $feed_title: [$title]($link)"
 # Users who can bypass room permission checks
 admins:
 - "@user:example.com"
+# Prune (delete) entries older than x days. 30, 60, 365, etc. Default is disabled (0).
+prune_entries: 0
