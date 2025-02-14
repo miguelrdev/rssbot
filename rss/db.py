@@ -248,5 +248,5 @@ class DBManager:
         await self.db.execute(q, feed_id, room_id, feed_filter)
 
     async def prune_entries(self, num_days: int) -> None:
-        q = "DELETE FROM entry WHERE date < DATETIME('NOW', '-' || $1 || ' days')"
+        q = "DELETE FROM entry WHERE date < DATETIME('NOW', 'localtime', '-' || $1 || ' days')"
         await self.db.execute(q, num_days)

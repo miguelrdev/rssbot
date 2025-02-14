@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from typing import Any, Iterable
-from datetime import datetime
+from datetime import datetime, timedelta
 from string import Template
 from time import mktime, time
 from types import FrameType
@@ -116,11 +116,18 @@ class RSSBot(Plugin):
         except Exception:
             self.log.exception("Fatal error while polling feeds")
 
+    def _valid_prune_entries(self) -> int | bool:
+        prune_entries = self.config["prune_entries"]
+        if prune_entries and type(prune_entries) is int and prune_entries > 0:
+            return prune_entries
+        else:
+            return False
+
     async def prune_entries(self) -> None:
         try:
             while True:
-                prune_entries = self.config["prune_entries"]
-                if prune_entries and type(prune_entries) is int and prune_entries > 0:
+                if prune_entries := self._valid_prune_entries():
+                    self.log.info(f"Pruning entries older than {prune_entries} days.")
                     await self.dbm.prune_entries(prune_entries)
                 await asyncio.sleep(86400)  # prune_entries daily. 1 day = 86400s.
         except asyncio.CancelledError:
@@ -197,6 +204,7 @@ class RSSBot(Plugin):
         tasks = [self.try_parse_feed(feed=feed) for feed in subs if feed.next_retry < now]
         feed: Feed
         entries: Iterable[Entry]
+        prune_entries = self._valid_prune_entries()
         self.log.info(f"Polling {len(tasks)} feeds")
         for res in asyncio.as_completed(tasks):
             feed, entries = await res
@@ -220,6 +228,12 @@ class RSSBot(Plugin):
             except Exception:
                 self.log.exception(f"Weird error in items of {feed.url}")
                 continue
+            if prune_entries:
+                cutoff = datetime.now() - timedelta(days=prune_entries)
+                for old_del_entry in [
+                    entry for entry in new_entries.values() if entry.date < cutoff
+                ]:
+                    new_entries.pop(old_del_entry.id, None)
             for old_entry in await self.dbm.get_entries(feed.id):
                 new_entries.pop(old_entry.id, None)
             self.log.trace(f"Feed {feed.id} had {len(new_entries)} new entries")
