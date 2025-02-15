@@ -1,4 +1,4 @@
-# rss - A maubot plugin to subscribe to RSS/Atom feeds.
+# rssbot - A maubot plugin to subscribe to RSS/Atom feeds.
 # Copyright (C) 2022 Tulir Asokan
 #
 # This program is free software: you can redistribute it and/or modify
