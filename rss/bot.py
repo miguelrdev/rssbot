@@ -1,4 +1,4 @@
-# rss - A maubot plugin to subscribe to RSS/Atom feeds.
+# rssbot - A maubot plugin to subscribe to RSS/Atom feeds.
 # Copyright (C) 2022 Tulir Asokan
 #
 # This program is free software: you can redistribute it and/or modify
@@ -46,7 +46,7 @@ from mautrix.util.config import BaseProxyConfig, ConfigUpdateHelper
 from .db import DBManager, Entry, Feed, Subscription
 from .migrations import upgrade_table
 
-rss_change_level = EventType.find("xyz.maubot.rss", t_class=EventType.Class.STATE)
+rss_change_level = EventType.find("dev.miguelr.rssbot", t_class=EventType.Class.STATE)
 
 
 class Config(BaseProxyConfig):
@@ -269,7 +269,7 @@ class RSSBot(Plugin):
     @property
     def _feed_get_headers(self) -> dict[str, str]:
         return {
-            "User-Agent": f"maubot/{maubot_version} +https://github.com/maubot/rss",
+            "User-Agent": f"maubot/{maubot_version} +https://github.com/miguelrdev/rssbot",
         }
 
     async def parse_feed(
